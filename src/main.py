@@ -1,21 +1,21 @@
 import src.graphics as gl
 from src.quicksort import *
-import random, time, enum
+import random, time
 
-class STATES(enum.Enum):
-    TITLE = 1
-    MAIN_MENU = 2
-    PLAYING = 3
-    RESULT = 4
-    EXIT = 5
+class STATES:
+  def __init__(self, _state):
+      self.state = _state
 
 
+SCREEN_WIDTH = 1080
+SCREEN_HEIGTH = 720
 
 MAX_HEIGHT = 50
 MAX_WIDTH = 20
 MAX_DISTANCE = 20 # distance between bars
 
-option = STATES.MAIN_MENU.value
+
+
 DARK_BLUE = gl.color_rgb(0, 0, 50)
 
 
@@ -98,6 +98,18 @@ def RandRBG():
 
 def SetupQuickSort(origin, size, numberList, BarsList):
     for x in range(size):
+        n = numberList[x]
+        bar = Bars(gl.Point(origin.x, origin.y), MAX_WIDTH, -n / MAX_HEIGHT * 100, RandRBG(), n)
+        BarsList.append(bar)
+        origin.x += MAX_WIDTH + MAX_DISTANCE
+        pivotState.append(0)  # not pivot
+    print("unsorted-->", numberList)
+    Quicksort(numberList, 0, len(numberList) - 1)
+    print("sorted-->", numberList)
+
+
+def SetupRandQuickSort(origin, size, numberList, BarsList):
+    for x in range(size):
         n = RandInt(1, 100)
         numberList.append(n)
         bar = Bars(gl.Point(origin.x, origin.y), MAX_WIDTH, -n / MAX_HEIGHT * 100, RandRBG(), n)
@@ -137,44 +149,105 @@ def DrawQuickSortAnimation(canvas, BarsList, size, steps):
             change = False
 
 
-def DrawMainMenu(canvas):
-
-    PrintMessage(canvas, gl.Point(200, 100), "Seleccione cantidad de elementos")
-    input_box = gl.Entry(gl.Point(400, 100), 4)
-    input_box.draw(canvas)
+def DrawMainMenu(canvas, list , mode):
+    canvas.setBackground(DARK_BLUE)
+    PrintMessage(canvas, gl.Point(canvas.width / 2, 50), "Algoritmo Quicksort")
+    menuOp = PrintMessage(canvas, gl.Point(200, 100), "Seleccione cantidad de elementos")
+    menuOp2 = PrintMessage(canvas, gl.Point(700, 100), "O inserte los digitos: ")
+    in_SizeBox = gl.Entry(gl.Point(400, 100), 4)
+    in_SizeBox.draw(canvas)
+    in_DigitBox = gl.Entry(gl.Point(900,100), 10)
+    in_DigitBox.draw(canvas)
     txt = PrintMessage(canvas, gl.Point(200, 120), "", "red")
     ans = DrawRect(canvas, gl.Point(450, 90), 50, 30, "red")
+    ans2 = DrawRect(canvas, gl.Point(SCREEN_WIDTH-100, 90), 50, 30, "blue")
     op = True
     while op:
         mouse = canvas.getMouse()
         if (ans.getP1().x < mouse.getX() < ans.getP2().x) and (mouse.getY() > ans.getP1().y and mouse.getY() < ans.getP2().y):
-            SIZE = int(input_box.getText())
-            txt.setText("cantidad escogida: " + str(SIZE))
-            print(str(SIZE))
+            SIZE = int(in_SizeBox.getText())
+            print("size: " + str(SIZE))
+            mode.state = 1
             op = False
-            return SIZE # user selected
-    return 1#min val
+        if (ans2.getP1().x < mouse.getX() < ans2.getP2().x) and (mouse.getY() > ans2.getP1().y and mouse.getY() < ans2.getP2().y):
+            numText = in_DigitBox.getText()
+            getNumbers(numText, list)
+            SIZE = len(list)
+            print("size: " + str(SIZE))
+            print("array: " + str(list))
+            mode.state = 2
+            op = False
+    menuOp.undraw()
+    menuOp2.undraw()
+    in_SizeBox.undraw()
+    in_DigitBox.undraw()
+    ans.undraw()
+    ans2.undraw()
+    txt.undraw()
+    return SIZE  # user selected
 
+
+def Repeat(canvas, num, bars):
+    txt = PrintMessage(canvas, gl.Point(200, SCREEN_HEIGTH - 100), "Desea Repetir?")
+    ans = DrawRect(canvas, gl.Point(450, SCREEN_HEIGTH - 100), 50, 30, "red")
+    ans2 = DrawRect(canvas, gl.Point(550, SCREEN_HEIGTH - 100), 50, 30, "green")
+    op = True
+    while op:
+        mouse = canvas.getMouse()
+        if (ans.getP1().x < mouse.getX() < ans.getP2().x) and (
+                mouse.getY() > ans.getP1().y and mouse.getY() < ans.getP2().y):
+            print("saliendo...")
+            op = False
+        if (ans2.getP1().x < mouse.getX() < ans2.getP2().x) and (
+                mouse.getY() > ans2.getP1().y and mouse.getY() < ans2.getP2().y):
+            print("repitiendo...")
+            txt.undraw()
+            ans.undraw()
+            ans2.undraw()
+            ClearLists(num, bars)
+            canvas.update()
+            return True
+    return False
+
+
+def getNumbers(string, result):
+    print(string)
+    string += "-"
+    digits = ""
+    for char in range(len(string)):
+        if string[char] == '-' or string[char] == ',':
+            print(digits)
+            result.append(int(digits))
+            digits = ""
+        else:
+            digits += string[char]
 
 def main():
-    win = gl.GraphWin("Quicksort Visualizer", 1080, 720, autoflush=True)
-    win.setBackground(DARK_BLUE)
-    PrintMessage(win, gl.Point(win.width / 2, 50), "Algoritmo Quicksort")
-    # App code starts here
-    SIZE = DrawMainMenu(win) #get amount of elements
-    origin = gl.Point(50, win.height/2 + 100)
-    numberList = [] # holds the number to be sorted
-    BarsList = [] # holds all the bars
-    # Setup all the rectangles
-    SetupQuickSort(origin, SIZE, numberList, BarsList)
-    # make animation (switch objects base on moveset)
-    DrawQuickSortAnimation(win, BarsList, SIZE, 0.5)
-    # # print final result on screen
-    print("value (x, y)")
-    for i in range(SIZE):
-        BarsList[i].Draw(win)
-        print(str(BarsList[i].value), "(", str(BarsList[i].origin.x), ", ", str(BarsList[i].origin.y), ")")
+    win = gl.GraphWin("Quicksort Visualizer", SCREEN_WIDTH, SCREEN_HEIGTH, autoflush=True)
 
+    # App code starts here
+    op = True
+    option = STATES(0)
+    while op:
+        origin = gl.Point(50, win.height / 2 + 100)
+        numberList = []  # holds the number to be sorted
+        BarsList = []  # holds all the bars
+        SIZE = DrawMainMenu(win, numberList, option) #get amount of elements
+        # Setup all the rectangles
+        if option.state == 1:
+            SetupRandQuickSort(origin, SIZE, numberList, BarsList)
+        elif option.state == 2:
+            SetupQuickSort(origin, SIZE, numberList, BarsList)
+
+        # make animation (switch objects base on moveset)
+        DrawQuickSortAnimation(win, BarsList, SIZE, 0.5)
+        # # print final result on screen
+        print("value (x, y)")
+        for i in range(SIZE):
+            BarsList[i].Draw(win)
+            print(str(BarsList[i].value), "(", str(BarsList[i].origin.x), ", ", str(BarsList[i].origin.y), ")")
+        op = Repeat(win, numberList, BarsList)
+        option.state = 0
 
     win.getMouse()# Pausa la ventana para ver el resultado
     win.close()  #Cierra el programa
