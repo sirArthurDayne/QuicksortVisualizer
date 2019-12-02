@@ -1,6 +1,6 @@
 import src.graphics as gl
 from src.quicksort import *
-import random, time
+import random, time, winsound
 
 class STATES:
   def __init__(self, _state):
@@ -77,6 +77,7 @@ def PrintMessage(canvas, pos, message, color = "white", state=0):
 def DrawRect(canvas, pos, w, h, color, state=0):
     rect = gl.Rectangle(pos, gl.Point(pos.x + w, pos.y + h))
     rect.setFill(color)
+    rect.setWidth(3)
     if state == 0:
         rect.setOutline('white')
     elif state == 1:#pivot color
@@ -130,14 +131,14 @@ def DrawQuickSortAnimation(canvas, BarsList, size, steps):
     change = True
     while change:
         if move < len(moveset):  # if the still movements to do
-            # win.update()
             DrawQuickSort(canvas, BarsList)
-            # get the distance
+            #get the distance
             difX = BarsList[moveset[move]._from].origin.x - BarsList[moveset[move]._to].origin.x
             BarsList[moveset[move]._to].origin.move(difX, 0)
             BarsList[moveset[move]._from].origin.move(-difX, 0)
             time.sleep(steps)
-            # switch the list
+            winsound.PlaySound("../media/Bleep-sound", winsound.SND_FILENAME)
+            # switch the list objs
             BarsList[moveset[move]._to], BarsList[moveset[move]._from] = BarsList[moveset[move]._from], BarsList[
                 moveset[move]._to]
             print("move ", BarsList[moveset[move]._from].value, " to ", BarsList[moveset[move]._to].value)
@@ -240,7 +241,7 @@ def main():
             SetupQuickSort(origin, SIZE, numberList, BarsList)
 
         # make animation (switch objects base on moveset)
-        DrawQuickSortAnimation(win, BarsList, SIZE, 0.5)
+        DrawQuickSortAnimation(win, BarsList, SIZE, 0.015)
         # # print final result on screen
         print("value (x, y)")
         for i in range(SIZE):
