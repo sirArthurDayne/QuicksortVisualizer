@@ -2,23 +2,23 @@ import src.graphics as gl
 from src.quicksort import *
 import random, time, winsound
 
+#Esta clase controla los estados del programa
 class STATES:
   def __init__(self, _state):
       self.state = _state
 
-
+#dimensiones de la pantalla
 SCREEN_WIDTH = 1080
 SCREEN_HEIGTH = 720
 
+#CONSTANTES AUXILIARES
 MAX_HEIGHT = 50
 MAX_WIDTH = 20
 MAX_DISTANCE = 20 # distance between bars
-
-
-
 DARK_BLUE = gl.color_rgb(0, 0, 50)
 
 
+#Esta clase mantiene el control de las barras dibujadas en pantalla
 class Bars:
     def __init__(self, _origin, _w, _h, _color, _value):
         self.origin = _origin
@@ -28,16 +28,16 @@ class Bars:
         self.value = _value
         self.obj = None
         self.TextVal = None
-
+    #dibuja la barra
     def Draw(self, canvas, state=0):
         self.obj = DrawRect(canvas, self.origin, self.w, self.h, self.color, state)
         self.TextVal = PrintMessage(canvas, gl.Point(self.origin.x+10, self.origin.y + 10), self.value, 'white', state)
-
+    #borra la barra
     def Clear(self):
         self.obj.undraw()
         self.TextVal.undraw()
 
-
+#funcion auxiliar que limpia los arreglos antes de iniciar nuevo sorteo
 def ClearLists(num, bars):
     for i in range(len(bars)):
         bars[i].Clear()
@@ -45,21 +45,7 @@ def ClearLists(num, bars):
     num.clear()
     moveset.clear()
 
-def SierpinskiTriangle(canvas, a, b, c, iter):
-    tri = gl.Polygon(a, b, c)
-    tri.setFill(gl.color_rgb(int(a.x / canvas.width) * 255 + 10, int(b.x / canvas.width) * 255 + 50, int(c.x / canvas.width) * 255 + 30))
-    # nuevos coord
-    ab = gl.Point((a.x + b.x) / 2, (a.y + b.y) / 2)
-    ac = gl.Point((a.x + c.x) / 2, (a.y + c.y) / 2)
-    bc = gl.Point((b.x + c.x) / 2, (b.y + c.y) / 2)
-
-    if iter > 1:#nuevos llamados
-        SierpinskiTriangle(canvas, a, ab, ac, iter - 1)
-        SierpinskiTriangle(canvas, ab, b, bc, iter - 1)
-        SierpinskiTriangle(canvas, ac, bc, c, iter - 1)
-    else:
-        tri.draw(canvas)
-
+#Permite dibujar mensajes en pantalla
 def PrintMessage(canvas, pos, message, color = "white", state=0):
     text = gl.Text(pos, str(message))
     if state == 0:
@@ -73,7 +59,7 @@ def PrintMessage(canvas, pos, message, color = "white", state=0):
     text.draw(canvas)
     return text
 
-
+#Permite dibujar rectangulos en pantalla
 def DrawRect(canvas, pos, w, h, color, state=0):
     rect = gl.Rectangle(pos, gl.Point(pos.x + w, pos.y + h))
     rect.setFill(color)
@@ -88,15 +74,19 @@ def DrawRect(canvas, pos, w, h, color, state=0):
     rect.draw(canvas)
     return rect
 
+#Permite obtener un numero aleatorio
 def RandInt(min, max):
     return random.randint(min, max)
 
+#Permite obtener un color aleatorio
 def RandRBG():
     r = random.randrange(255)
     g = random.randrange(255)
     b = random.randrange(255)
     return gl.color_rgb(r,g,b)
 
+
+#SETUP1: permite preparar el arreglo con numeros que el usuario a especificado
 def SetupQuickSort(origin, size, numberList, BarsList):
     for x in range(size):
         n = numberList[x]
@@ -109,6 +99,7 @@ def SetupQuickSort(origin, size, numberList, BarsList):
     print("sorted-->", numberList)
 
 
+#SETUP2: permite preparar el arreglo con numeros aleatorios
 def SetupRandQuickSort(origin, size, numberList, BarsList):
     for x in range(size):
         n = RandInt(1, 100)
@@ -122,10 +113,13 @@ def SetupRandQuickSort(origin, size, numberList, BarsList):
     Quicksort(numberList, 0, len(numberList) - 1)
     print("sorted-->", numberList)
 
+#funcion base para dibujar las barras en pantalla
 def DrawQuickSort(canvas, Bars):
     for i in range(len(Bars)):  # draw the result first
         Bars[i].Draw(canvas, pivotState[i])
 
+
+# Dibuja la animacion del algoritmo en pantalla
 def DrawQuickSortAnimation(canvas, BarsList, size, steps):
     move = 0
     change = True
@@ -149,7 +143,7 @@ def DrawQuickSortAnimation(canvas, BarsList, size, steps):
         else:
             change = False
 
-
+#dibuja el menu principal en pantalla
 def DrawMainMenu(canvas, list , mode):
     canvas.setBackground(DARK_BLUE)
     PrintMessage(canvas, gl.Point(canvas.width / 2, 50), "Algoritmo Quicksort")
@@ -187,8 +181,8 @@ def DrawMainMenu(canvas, list , mode):
     txt.undraw()
     return SIZE  # user selected
 
-
-def Repeat(canvas, num, bars):
+#dibuja el menu tras terminar la animacion del algoritmo
+def FinishMenu(canvas, num, bars):
     txt = PrintMessage(canvas, gl.Point(200, SCREEN_HEIGTH - 100), "Desea Repetir?")
     ans = DrawRect(canvas, gl.Point(450, SCREEN_HEIGTH - 100), 50, 30, "red")
     ans2 = DrawRect(canvas, gl.Point(550, SCREEN_HEIGTH - 100), 50, 30, "green")
@@ -210,7 +204,7 @@ def Repeat(canvas, num, bars):
             return True
     return False
 
-
+#permite guardar los numeros que el usuario ingrese
 def getNumbers(string, result):
     print(string)
     string += "-"
@@ -223,32 +217,35 @@ def getNumbers(string, result):
         else:
             digits += string[char]
 
+#funcion main clasica
 def main():
+    #crea una ventana
     win = gl.GraphWin("Quicksort Visualizer", SCREEN_WIDTH, SCREEN_HEIGTH, autoflush=True)
 
     # App code starts here
     op = True
     option = STATES(0)
-    while op:
+    while op:#loop principal
         origin = gl.Point(50, win.height / 2 + 100)
-        numberList = []  # holds the number to be sorted
-        BarsList = []  # holds all the bars
-        SIZE = DrawMainMenu(win, numberList, option) #get amount of elements
-        # Setup all the rectangles
-        if option.state == 1:
+        numberList = []  # guarda los numeros para el sorteo
+        BarsList = []  # guarda las barras
+        SIZE = DrawMainMenu(win, numberList, option) #obtiene el tamaño del arreglo
+        # Prepara los rectangulos a dibujar
+        if option.state == 1:#si es aleatorio, se llama la funcion RandQuicksort
             SetupRandQuickSort(origin, SIZE, numberList, BarsList)
-        elif option.state == 2:
+        elif option.state == 2:# si el usuario interviene, se llama la funcion SetQuicksort
             SetupQuickSort(origin, SIZE, numberList, BarsList)
 
-        # make animation (switch objects base on moveset)
+        # Crea la animacion
         DrawQuickSortAnimation(win, BarsList, SIZE, 0.015)
-        # # print final result on screen
-        print("value (x, y)")
+        print("value (x, y)")#DEBUG
+        # Dibuja el resultado  final en pantalla
         for i in range(SIZE):
-            BarsList[i].Draw(win)
+            BarsList[i].Draw(win)#dibuja barra a barra
+            #DEBUG
             print(str(BarsList[i].value), "(", str(BarsList[i].origin.x), ", ", str(BarsList[i].origin.y), ")")
-        op = Repeat(win, numberList, BarsList)
-        option.state = 0
+        op = FinishMenu(win, numberList, BarsList)#llama al menu final
+        option.state = 0#vuelve estado por defecto antes de iterar
 
     win.getMouse()# Pausa la ventana para ver el resultado
     win.close()  #Cierra el programa
